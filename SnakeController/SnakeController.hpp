@@ -49,6 +49,7 @@ private:
     Direction m_currentDirection;
     std::list<Segment> m_segments;
     void initNewHead(Segment& newHead);
+    bool checkHeadColisionWithTail(Segment head);
 };
 
 } // namespace Snake

@@ -74,7 +74,20 @@ void Controller::initNewHead(Segment& newHead)
     newHead.y = currentHead.y + (not (m_currentDirection & 0b01) ? (m_currentDirection & 0b10) ? 1 : -1 : 0);
     newHead.ttl = currentHead.ttl;
 }
-
+bool Controller::checkHeadColisionWithTail(Segment head)
+{
+    bool lost = false;
+    for (auto segment : m_segments) 
+    {
+        if (segment.x == head.x and segment.y == head.y) 
+        {
+            m_scorePort.send(std::make_unique<EventT<LooseInd>>());
+            lost = true;
+            break;
+        }
+    }
+    return lost;
+}
 void Controller::receive(std::unique_ptr<Event> e)
 {
     try {
@@ -82,17 +95,7 @@ void Controller::receive(std::unique_ptr<Event> e)
         Segment newHead;
         initNewHead(newHead);
 
-        bool lost = false;
-
-        for (auto segment : m_segments) 
-        {
-            if (segment.x == newHead.x and segment.y == newHead.y) 
-            {
-                m_scorePort.send(std::make_unique<EventT<LooseInd>>());
-                lost = true;
-                break;
-            }
-        }
+        bool lost = checkHeadColisionWithTail(newHead);
 
         if (not lost) 
         {
