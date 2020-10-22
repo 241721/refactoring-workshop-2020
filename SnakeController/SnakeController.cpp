@@ -1,3 +1,4 @@
+#pragma once
 #include "SnakeController.hpp"
 
 #include <algorithm>
@@ -65,29 +66,36 @@ Controller::Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePo
     }
 }
 
+void Controller::initNewHead(Segment& newHead)
+{
+    Segment const& currentHead = m_segments.front();
+    
+    newHead.x = currentHead.x + ((m_currentDirection & 0b01) ? (m_currentDirection & 0b10) ? 1 : -1 : 0);
+    newHead.y = currentHead.y + (not (m_currentDirection & 0b01) ? (m_currentDirection & 0b10) ? 1 : -1 : 0);
+    newHead.ttl = currentHead.ttl;
+}
+
 void Controller::receive(std::unique_ptr<Event> e)
 {
     try {
         auto const& timerEvent = *dynamic_cast<EventT<TimeoutInd> const&>(*e);
-
-        Segment const& currentHead = m_segments.front();
-
         Segment newHead;
-        newHead.x = currentHead.x + ((m_currentDirection & 0b01) ? (m_currentDirection & 0b10) ? 1 : -1 : 0);
-        newHead.y = currentHead.y + (not (m_currentDirection & 0b01) ? (m_currentDirection & 0b10) ? 1 : -1 : 0);
-        newHead.ttl = currentHead.ttl;
+        initNewHead(newHead);
 
         bool lost = false;
 
-        for (auto segment : m_segments) {
-            if (segment.x == newHead.x and segment.y == newHead.y) {
+        for (auto segment : m_segments) 
+        {
+            if (segment.x == newHead.x and segment.y == newHead.y) 
+            {
                 m_scorePort.send(std::make_unique<EventT<LooseInd>>());
                 lost = true;
                 break;
             }
         }
 
-        if (not lost) {
+        if (not lost) 
+        {
             if (std::make_pair(newHead.x, newHead.y) == m_foodPosition) {
                 m_scorePort.send(std::make_unique<EventT<ScoreInd>>());
                 m_foodPort.send(std::make_unique<EventT<FoodReq>>());
@@ -110,7 +118,8 @@ void Controller::receive(std::unique_ptr<Event> e)
             }
         }
 
-        if (not lost) {
+        if (not lost) 
+        {
             m_segments.push_front(newHead);
             DisplayInd placeNewHead;
             placeNewHead.x = newHead.x;
