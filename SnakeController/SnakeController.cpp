@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <exception>
 
 #include "EventT.hpp"
 #include "IPort.hpp"
@@ -215,6 +216,22 @@ Controller::Segment Controller::getNewHead() const
 
 void Controller::receive(std::unique_ptr<Event> e)
 {
+    switch (e->getMessageId())
+    {
+    case 0x20:
+        break;
+    case 0x10:
+        std::unique_ptr<DirectionInd> ex(std::make_unique<DirectionInd>(e->clone()));
+        break;
+    case 0x40:
+        break;
+    case 0x42:
+        break;
+    default:
+        throw UnexpectedEventException();
+        break;
+    }
+    
     try {
         handleTimePassed(*dynamic_cast<EventT<TimeoutInd> const&>(*e));
     } catch (std::bad_cast&) {
